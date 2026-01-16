@@ -14,14 +14,25 @@ const sneakerSchema = new mongoose.Schema(
       type: Number,
       required: true,
     },
-    images: [String],
+
+    // Can store URL or Base64
+    images: {
+      type: [String],
+      default: [],
+    },
+
     sizes: [
       {
         size: Number,
         stock: Number,
       },
     ],
+
     description: String,
+
+    shop: String,
+    link: String,
+
     isPopular: {
       type: Boolean,
       default: false,

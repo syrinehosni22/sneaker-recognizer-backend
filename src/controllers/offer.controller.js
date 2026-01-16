@@ -1,5 +1,5 @@
 const Offer = require("../models/Offer");
-const Sneaker = require("../models/Sneaker");
+const Sneaker = require("../models/Product");
 const { success, error } = require("../utils/response");
 
 // GET ALL ACTIVE OFFERS
