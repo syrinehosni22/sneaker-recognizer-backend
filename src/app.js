@@ -13,6 +13,8 @@ app.use("/api/cart", require("./routes/cart.routes"));
 app.use("/api/orders", require("./routes/order.routes"));
 app.use("/api/payments", require("./routes/payment.routes"));
 app.use("/api/offers", require("./routes/offer.routes"));
+app.use("/api/shops", require("./routes/shop.routes"));
+app.use("/api/payment", require("./routes/payment.routes"));
 
 // Error handler
 app.use(require("./middlewares/error.middleware"));

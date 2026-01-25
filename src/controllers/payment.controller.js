@@ -1,42 +1,39 @@
 const Stripe = require("stripe");
-const Order = require("../models/Order");
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-const { success, error } = require("../utils/response");
 
-// CREATE PAYMENT INTENT
-exports.createPaymentIntent = async (req, res, next) => {
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+
+const createPaymentIntent = async (req, res) => {
   try {
-    const { orderId } = req.body;
-    const order = await Order.findById(orderId);
-    if (!order) return error(res, "Order not found", 404);
+    const { amount, currency } = req.body;
+
+    if (!amount) {
+      return res.status(400).json({
+        success: false,
+        message: "Amount is required",
+      });
+    }
 
     const paymentIntent = await stripe.paymentIntents.create({
-      amount: Math.round(order.total * 100), // Stripe uses cents
-      currency: "usd",
-      metadata: { orderId: order._id.toString() },
+      amount, // amount in cents
+      currency: currency || "usd",
+      automatic_payment_methods: { enabled: true },
     });
 
-    order.paymentIntentId = paymentIntent.id;
-    await order.save();
+    res.status(200).json({
+      success: true,
+      clientSecret: paymentIntent.client_secret,
+    });
+  } catch (error) {
+    console.error("Stripe error:", error);
 
-    success(res, { clientSecret: paymentIntent.client_secret }, "Payment intent created");
-  } catch (err) {
-    next(err);
+    res.status(500).json({
+      success: false,
+      message: "Failed to create payment intent",
+      error: error.message,
+    });
   }
 };
 
-// CONFIRM PAYMENT (webhook or manual)
-exports.confirmPayment = async (req, res, next) => {
-  try {
-    const { orderId } = req.body;
-    const order = await Order.findById(orderId);
-    if (!order) return error(res, "Order not found", 404);
-
-    order.status = "PAID";
-    await order.save();
-
-    success(res, order, "Payment confirmed");
-  } catch (err) {
-    next(err);
-  }
+module.exports = {
+  createPaymentIntent,
 };

@@ -8,6 +8,8 @@ router.post("/register", authController.register);
 router.post("/login", authController.login);
 router.post("/reset-password", authController.resetPassword);
 router.post("/send-code", authController.sendCode);
+router.post("/verify-code", authController.verifyCode);
+
 
 // Private route
 router.get("/me", auth, authController.me);

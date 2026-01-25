@@ -117,3 +117,58 @@ exports.sendCode = async (req, res) => {
     });
   }
 };
+
+// VERIFY EMAIL CODE
+exports.verifyCode = async (req, res) => {
+  try {
+    const { email, code } = req.body;
+
+    if (!email || !code) {
+      return res.status(400).json({
+        message: "Email and code are required",
+      });
+    }
+
+    const record = await EmailVerification.findOne({ email });
+    if (!record) {
+      return res.status(400).json({
+        message: "Invalid or expired verification code",
+      });
+    }
+
+    // Check expiration
+    if (record.expiresAt < new Date()) {
+      await EmailVerification.deleteOne({ email });
+      return res.status(400).json({
+        message: "Verification code expired",
+      });
+    }
+
+    // Compare code
+    const isValid = await bcrypt.compare(code, record.codeHash);
+    if (!isValid) {
+      return res.status(400).json({
+        message: "Invalid verification code",
+      });
+    }
+
+    // Optional: mark user as verified
+    await User.findOneAndUpdate(
+      { email },
+      { isEmailVerified: true },
+      { new: true }
+    );
+
+    // Remove used code
+    await EmailVerification.deleteOne({ email });
+
+    return res.status(200).json({
+      message: "Email verified successfully",
+    });
+  } catch (err) {
+    console.error("Verify code error:", err);
+    return res.status(500).json({
+      message: "Verification failed",
+    });
+  }
+};
